@@ -14,7 +14,13 @@ const publicFiles = helper.getFiles(PUBLIC_PATH)
 const server = http2.createSecureServer({
   cert: fs.readFileSync(path.join(__dirname, '../ssl/cert.pem')),
   key: fs.readFileSync(path.join(__dirname, '../ssl/key.pem'))
-}, onRequest)
+});
+
+server.on('error', (err) => console.error(err));
+server.on('socketError', (err) => console.error(err));
+
+server.on('stream', onRequest);
+
 
 // Push file
 function push (stream, path) {
@@ -30,25 +36,28 @@ function push (stream, path) {
 }
 
 // Request handler
-function onRequest (req, res) {
-  const reqPath = req.path === '/' ? '/index.html' : req.path
+function onRequest (stream, headers) {
+  const reqPath = headers[':path'] === '/' ? '/index.html' : headers[':path'];
   const file = publicFiles.get(reqPath)
 
   // File not found
   if (!file) {
-    res.statusCode = 404
-    res.end()
+    stream.respond({
+        'content-type': 'text/html',
+        ':status': 404
+    });
+    stream.end('<h1>Page Not Found</h1>');
     return
   }
 
   // Push with index.html
   if (reqPath === '/index.html') {
-    push(res.stream, '/bundle1.js')
-    push(res.stream, '/bundle2.js')
+    push(stream, '/bundle1.js')
+    push(stream, '/bundle2.js')
   }
 
   // Serve file
-  res.stream.respondWithFD(file.fileDescriptor, file.headers)
+  stream.respondWithFD(file.fileDescriptor, file.headers)
 }
 
 server.listen(PORT, (err) => {
