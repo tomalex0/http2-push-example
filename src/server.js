@@ -42,7 +42,7 @@ function onRequest (req, res) {
         'content-type': 'text/html',
         ':status': 404
     });
-    res.end('<h1>Page Not Found</h1>');
+    res.stream.end('<h1>Page Not Found</h1>');
     return
   }
 
