@@ -48,12 +48,12 @@ function onRequest (req, res) {
 
   // Push with index.html
   if (reqPath === '/index.html') {
-    push(req.stream, '/bundle1.js')
-    push(req.stream, '/bundle2.js')
+    push(res.stream, '/bundle1.js')
+    push(res.stream, '/bundle2.js')
   }
 
   // Serve file
-  req.stream.respondWithFD(file.fileDescriptor, file.headers)
+  res.stream.respondWithFD(file.fileDescriptor, file.headers)
 }
 
 server.listen(PORT, (err) => {
